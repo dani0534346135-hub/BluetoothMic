@@ -19,31 +19,15 @@ jobs:
         shell: bash
         run: |
           set -e
-          echo "ANDROID_HOME=$ANDROID_HOME"
-          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
-
           SDKMANAGER=""
           for p in             "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"             "$ANDROID_HOME/cmdline-tools/16.0/bin/sdkmanager"             "$ANDROID_HOME/cmdline-tools/15.0/bin/sdkmanager"             "$ANDROID_HOME/cmdline-tools/14.0/bin/sdkmanager"; do
-            if [ -x "$p" ]; then
-              SDKMANAGER="$p"
-              break
-            fi
+            if [ -x "$p" ]; then SDKMANAGER="$p"; break; fi
           done
-
           if [ -z "$SDKMANAGER" ]; then
             SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager 2>/dev/null | head -n 1 || true)"
           fi
-
-          if [ -z "$SDKMANAGER" ]; then
-            echo "sdkmanager was not found in $ANDROID_HOME/cmdline-tools"
-            find "$ANDROID_HOME/cmdline-tools" -maxdepth 4 -type f -name sdkmanager -print || true
-            exit 1
-          fi
-
-          echo "Using SDK manager: $SDKMANAGER"
-          SDK_DIR="$(dirname "$SDKMANAGER")"
-          echo "$SDK_DIR" >> "$GITHUB_PATH"
-
+          test -n "$SDKMANAGER"
+          echo "$(dirname "$SDKMANAGER")" >> "$GITHUB_PATH"
           yes | "$SDKMANAGER" --licenses >/dev/null || true
           "$SDKMANAGER" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
@@ -51,17 +35,19 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      - name: Build debug APK
+      - name: Build fresh Android 12 APK
         run: gradle assembleDebug --no-daemon
 
-      - name: Verify APK
+      - name: Verify APK signature and package
         run: |
-          test -s app/build/outputs/apk/debug/app-debug.apk
-          ls -lh app/build/outputs/apk/debug/app-debug.apk
-          file app/build/outputs/apk/debug/app-debug.apk
+          APK="app/build/outputs/apk/debug/app-debug.apk"
+          test -s "$APK"
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose "$APK"
+          "$ANDROID_HOME/build-tools/35.0.0/aapt2" dump badging "$APK" | head -n 20
+          ls -lh "$APK"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: BluetoothMic-debug-apk
+          name: BluetoothMic-Android12-install
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
