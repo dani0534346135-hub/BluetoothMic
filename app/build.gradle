@@ -5,12 +5,11 @@ android {
     compileSdk 35
 
     defaultConfig {
-        // New application id avoids conflicts with earlier APK signatures on Android 12.
-        applicationId 'com.daniel.bluetoothmic.android12'
+        applicationId 'com.daniel.bluetoothmic.android11'
         minSdk 26
-        targetSdk 32
+        targetSdk 30
         versionCode 1
-        versionName '2.0'
+        versionName '2.1'
     }
 
     buildTypes {
