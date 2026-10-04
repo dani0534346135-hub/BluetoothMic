@@ -35,7 +35,7 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      - name: Build fresh Android 12 APK
+      - name: Build fresh Android 11 FIX APK
         run: gradle assembleDebug --no-daemon
 
       - name: Verify APK signature and package
@@ -48,6 +48,6 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: BluetoothMic-Android12-install
+          name: BluetoothMic-Android11-FIX-install
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
